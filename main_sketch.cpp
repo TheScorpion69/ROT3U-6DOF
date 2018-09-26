@@ -30,7 +30,7 @@ class rot3u_6dof_servo {
   }
 
   public bool isInitialized() {
-    return portNumber != -1;
+    return portNumber != UNDEFINED_PORT;
   }
   
   // Инициализация серво привода
@@ -74,7 +74,7 @@ void setup() {
   rot3u_6dof_servo.Initialize(DPORT1);
   delay(500);
   reset();
-  // wait for all operation processed
+  // подождем 1с пока все приводы закончат позиционирование
   delay(1000);
 }
 
