@@ -2,8 +2,8 @@
 #include <Servo.h>
 #include <math.h>
 
-const int INITIAL_SERVO_DELAY = 50;
-const int UNDEFINED_PORT = -1;
+#define INITIAL_SERVO_DELAY 50
+#define UNDEFINED -1
 
 /*
 * Обертка для работы с серво машинкой
@@ -14,7 +14,7 @@ class SGServo {
   private:
   int servoPosition = 0;
   Servo servo;
-  int portNumber = UNDEFINED_PORT;
+  int portNumber = UNDEFINED;
   // задержка при повороте на 1 градус
   // каждый сервопривод может иметь свою скорость вращения
   int degDelay = INITIAL_SERVO_DELAY;
@@ -56,7 +56,7 @@ class SGServo {
   }
 
   bool isInitialized() {
-    return portNumber != UNDEFINED_PORT;
+    return portNumber != UNDEFINED;
   }
   
   // Инициализация серво привода
@@ -94,9 +94,59 @@ class SGServo {
   
 };
 
-const int DPORT1 = 1;
+//Arduino UNO DIGITAL PORTS 0 .. 13
+#define DP1 1
 
 SGServo servo;
+
+#define ROT3U6DOF_SERVO_COUNT 6
+#define ROT3U6DOF_SERVO_START_PORT 1 // т.е. сервоприводы подключены к портам (1 .. ROT3U6DOF_SERVO_COUNT)
+
+const SGServo servos[ROT3U6DOF_SERVO_COUNT]; // 6 серво для ROT3U-6DOF
+
+void setupROT3U6DOF () {
+  for (int i=0; i<ROT3U6DOF_SERVO_COUNT; i++) {
+    SGServo currentServo = servos[i];
+    int portNumber = i + ROT3U6DOF_SERVO_START_PORT;
+    currentServo.initialize(portNumber);
+    // currentServo.setTimes(?,?) // врямена ШИМ для сервопривода MG995
+  }
+}
+
+void resetROT3U6DOF() {
+  // TODO установить начальное положение кутяпли
+}
+
+#define PROCESS_STEPS 100 // количество шагов для смены положения сервопривода
+
+/*
+* Установка всех сервоприводов за один раз
+* newPositions - массив новых позиций (если значение UNDEFINED, обработка привода пропускается)
+*/
+void performAllServos(int newPositions[ROT3U6DOF_SERVO_COUNT]) {
+  // сохраняем начальные значения приводов
+  int initialRanges[ROT3U6DOF_SERVO_COUNT];
+  for (int i=0; i<ROT3U6DOF_SERVO_COUNT; i++) {
+    SGServo currentServo = servos[i];
+    initialRanges[i] = currentServo.getPosition();
+  }
+  
+  for (int step = 0; step < PROCESS_STEPS; step++) {
+    // 
+    for (int i=0; i<ROT3U6DOF_SERVO_COUNT; i++) {
+      if (newPositions[i] == UNDEFINED) { // Менять значение не нужно
+        continue;
+      }
+      SGServo currentServo = servos[i];
+      if (newPositions[i] == currentServo.getPosition()) { // Сервопривод уже установлен в текущее положение
+        continue;
+      }
+      //TODO
+      
+      /*-----------------------*/ 
+    }
+  }
+}
 
 // Set initial position
 void reset() {
@@ -105,7 +155,8 @@ void reset() {
 }
 
 void setup() {
-  servo.initialize(DPORT1);
+  
+  servo.initialize(DP1);
   delay(500);
   reset();
   // подождем 1с пока все приводы закончат позиционирование
