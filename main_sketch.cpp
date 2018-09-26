@@ -1,10 +1,29 @@
 // Maksim Grebenev
 #include <Servo.h>
 
+const int INITIAL_SERVO_DELAY = 50;
+const int UNDEFINED_PORT = -1;
+
+const int DPORT1 = 1;
+/*
+* Обертка для работы с серво машинкой
+* Mg995 - сервомашинки для манипулятора ROT3U-6DOF
+* https://www.electronicoscaldas.com/datasheet/MG995_Tower-Pro.pdf
+*/
 class rot3u_6dof_servo {
-  private int servoPosition;
+  private int servoPosition = 0;
   private Servo servo;
-  private int portNumber = -1;
+  private int portNumber = UNDEFINED_PORT;
+  // задержка при повороте на 1 градус
+  // каждый сервопривод может иметь свою скорость вращения
+  private int degDelay = INITIAL_SERVO_DELAY;
+  private int getDegDelay() {
+    return degDelay;
+  }
+  private void setDegDelay(int value) {
+    degDelay = value;
+  }
+  __declspec(property(get = getDegDelay, put = setDegDelay)) int DelayPerGrad; 
   
   public int getPosition() {
     return servoPosition;
@@ -14,52 +33,54 @@ class rot3u_6dof_servo {
     return portNumber != -1;
   }
   
+  // Инициализация серво привода
   public void Initialize(int port) {
-    portNumber = port;
+    if (isInitialized()) {
+      return; // сервопривод уже инициализирован
+    }
+    portNumber = port; // сохраняем назначенный порт для проверки 
+    servo.attach(portNumber); // поключить сервопривод к порту
   }
   
   private int getPortNumber() {
     return portNumber;
   }
+  // обертка над инициализацией
   __declspec(property(get = getPortNumber, put = Initialize)) int Port; 
+  
+  // исполнение сервопривода
+  void perform (int to, int delay) {
+    int direction = (to - getPosition()) > 0 ? 1 : -1;
+    while (to != servoPosition) {
+      servo.write(servoPosition);
+      servoPosition += direction;
+      delay(delay);
+  }
+
+  void perform (int to) {
+    perform(to, DelayPerGrad)
+  }
 }
 
-const int DEG_DELAY = 1;
-
-Servo servo;
-int servoPosition=0;
+rot3u_6dof_servo servo;
 
 // Set initial position
 void reset() {
   // Initialize servo positions
-  servo.write(90); // set position to middle for each servo
-  servoPosition = 90;
+  servo.perform(90); // set position to middle for each servo
 }
 
 void setup() {
-servo.attach(1);
-delay(500);
-reset();
-// wait for all operation processed
-delay(1000);
-}
-/*
-* param servoNumber 1..N
-*/
-void setPosition(int to) {
-int direction = (to - servoPosition) > 0 ? 1 : -1;
-while (to != servoPosition) {
-servo.write(servoPosition);
-servoPosition += direction;
-delay(200);
-}
+  rot3u_6dof_servo.Initialize(DPORT1);
+  delay(500);
+  reset();
+  // wait for all operation processed
+  delay(1000);
 }
 
 void loop() {
-setPosition(0);
-//delay(500);
-setPosition(180);
-delay(500);
-//reset();
-//delay(1000);
+  servo.perform(0);
+  delay(500);
+  servo.perform(180);
+  delay(500);
 }
