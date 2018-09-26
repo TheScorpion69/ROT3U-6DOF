@@ -43,7 +43,7 @@ class SGServo {
   
   //Прямое управление ШИМ
   void servoPerformByPWD(int angle) {
-    int mappedAngleToTime = map(angle, minMicroseconds, maxMicroseconds, 0, 180);
+    int mappedAngleToTime = map(angle, 0, 180, minMicroseconds, maxMicroseconds);
     servo.writeMicroseconds(mappedAngleToTime);
   }
   
