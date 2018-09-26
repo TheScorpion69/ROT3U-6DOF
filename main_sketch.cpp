@@ -1,5 +1,6 @@
 // Maksim Grebenev
 #include <Servo.h>
+#include <math.h>
 
 const int INITIAL_SERVO_DELAY = 50;
 const int UNDEFINED_PORT = -1;
@@ -23,6 +24,8 @@ class SGServo {
   int getPortNumber() {
     return portNumber;
   }
+  int minMicroseconds; // Время ШИМ для положения 0 град
+  int maxMicroseconds; // Время ШИМ для положения 180 град
 
   public:
 
@@ -30,6 +33,20 @@ class SGServo {
     servoPosition = 0;
   }
 
+  //Устаноква времени ШИМ
+  //Pulse Width Modulation (PWM)
+  //Для использования точного позиционирования Servo.writeMicroseconds()
+  void setTimes(int min, int max) {
+    minMicroseconds = min;
+    maxMicroseconds = max;
+  }
+  
+  //Прямое управление ШИМ
+  void servoPerformByPWD(int angle) {
+    int mappedAngleToTime = map(angle, minMicroseconds, maxMicroseconds, 0, 180);
+    servo.writeMicroseconds(mappedAngleToTime);
+  }
+  
   int getPosition() {
     return servoPosition;
   }
