@@ -24,8 +24,8 @@ class SGServo {
   int getPortNumber() {
     return portNumber;
   }
-  int minMicroseconds; // Время ШИМ для положения 0 град
-  int maxMicroseconds; // Время ШИМ для положения 180 град
+  int minMicroseconds = 0; // Время ШИМ для положения 0 град
+  int maxMicroseconds = 0; // Время ШИМ для положения 180 град
 
   public:
 
@@ -35,16 +35,14 @@ class SGServo {
 
   //Устаноква времени ШИМ
   //Pulse Width Modulation (PWM)
-  //Для использования точного позиционирования Servo.writeMicroseconds()
+  //Для использования точного позиционирования servoPerformImmediatelyByPWD
   void setTimes(int min, int max) {
     minMicroseconds = min;
     maxMicroseconds = max;
   }
   
-  //Прямое управление ШИМ
-  void servoPerformByPWD(int angle) {
-    int mappedAngleToTime = map(angle, 0, 180, minMicroseconds, maxMicroseconds);
-    servo.writeMicroseconds(mappedAngleToTime);
+  bool PWDInitialized() {
+    return (minMicroseconds > 0 && maxMicroseconds > 0);
   }
   
   int getPosition() {
@@ -72,10 +70,25 @@ class SGServo {
   void perform (int to, int delay) {
     int direction = (to - getPosition()) > 0 ? 1 : -1;
     while (to != servoPosition) {
-      servo.write(servoPosition);
+      performImmediately(servoPosition);
       servoPosition += direction;
       ::delay(delay);
     }
+  }
+  
+  void performImmediately (int to) {
+    if (PWDInitialized()) {
+      servoPerformImmediatelyByPWD(to);
+    } else {
+      servo.write(to);
+    }
+    servoPosition = to;
+  }
+
+  //Прямое управление ШИМ
+  void servoPerformImmediatelyByPWD(int angle) {
+    int mappedAngleToTime = map(angle, 0, 180, minMicroseconds, maxMicroseconds);
+    servo.writeMicroseconds(mappedAngleToTime);
   }
 
   // исполнение сервопривода с установленной задержкой
@@ -117,7 +130,7 @@ void resetROT3U6DOF() {
   // TODO установить начальное положение кутяпли
 }
 
-#define PROCESS_STEPS 100 // количество шагов для смены положения сервопривода
+#define PROCESS_STEPS_COUNT 100 // количество шагов для смены положения сервопривода
 
 /*
 * Установка всех сервоприводов за один раз
@@ -130,8 +143,9 @@ void performAllServos(int newPositions[ROT3U6DOF_SERVO_COUNT]) {
     SGServo currentServo = servos[i];
     initialRanges[i] = currentServo.getPosition();
   }
-  
-  for (int step = 0; step < PROCESS_STEPS; step++) {
+
+  // выполняем смещение приводов 
+  for (int step = 0; step < PROCESS_STEPS_COUNT; step++) {
     // 
     for (int i=0; i<ROT3U6DOF_SERVO_COUNT; i++) {
       if (newPositions[i] == UNDEFINED) { // Менять значение не нужно
@@ -141,8 +155,13 @@ void performAllServos(int newPositions[ROT3U6DOF_SERVO_COUNT]) {
       if (newPositions[i] == currentServo.getPosition()) { // Сервопривод уже установлен в текущее положение
         continue;
       }
-      //TODO
-      
+
+      int shiftRange = newPositions[i] - initialRanges[i];
+      int nextPos = (int) (initialRanges[i] + ((float)(shiftRange*step)/PROCESS_STEPS_COUNT));
+
+      // Перемещаем привод в посчитанное положение. В зависимости от необходимости калибровки
+      currentServo.performImmediately(nextPos);
+      //currentServo.servoPerformImmediatelyByPWD(nextPos);
       /*-----------------------*/ 
     }
   }
