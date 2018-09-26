@@ -20,9 +20,6 @@ class SGServo {
   int getDegDelay() {
     return degDelay;
   }
-  void setDegDelay(int value) {
-    degDelay = value;
-  }
   int getPortNumber() {
     return portNumber;
   }
@@ -35,6 +32,10 @@ class SGServo {
 
   int getPosition() {
     return servoPosition;
+  }
+
+  void setDegDelay(int value) {
+    degDelay = value;
   }
 
   bool isInitialized() {
@@ -60,6 +61,13 @@ class SGServo {
     }
   }
 
+  // исполнение сервопривода с установленной задержкой
+  // Предпочтительно настроить все сервоприводы при их инициализации
+  // присоединяем к порту
+  // servo.initialize(DIGITAL_PORT_NUMBER);
+  // настраиваем скорость вращения путем инициализации времени задержки (в мс)
+  // после поворота сервомашинки на 1 градус
+  // servo.setDegDelay(DELAY_TIME_PER_1GRAD_ms)
   void perform (int to) {
     perform(to, degDelay);
   }
