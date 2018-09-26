@@ -163,8 +163,8 @@ void performAllServos(int newPositions[ROT3U6DOF_SERVO_COUNT]) {
       currentServo.performImmediately(nextPos);
       //currentServo.servoPerformImmediatelyByPWD(nextPos);
       /*-----------------------*/ 
-      ::delay(DELAY_FOR_SERVO_STEP);
     }
+    ::delay(DELAY_FOR_SERVO_STEP);
   }
 }
 
