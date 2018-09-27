@@ -14,6 +14,8 @@ void setup() {
 
   //****************************************
   servo.initialize(DP1);
+  // https://arduinomaster.ru/motor-dvigatel-privod/servoprivody-arduino-sg90-mg995-shema-podklyuchenie-upravlenie/
+  // servo.setTimes(544, 2400)
   delay(500);
   servo.perform(90);
   // подождем 1с пока все приводы закончат позиционирование
@@ -35,9 +37,10 @@ void loop() {
   performAllServos(position_step_01);
   */
   //****************************************
+  // тест для колиброви сервопривода
   servo.perform(0);
-  delay(500);
+  delay(5000);
   servo.perform(180);
-  delay(500);
+  delay(5000);
   //****************************************
 }
