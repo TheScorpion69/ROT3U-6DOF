@@ -18,7 +18,13 @@ void setupROT3U6DOF (int min, int max) {
 }
 
 #define PROCESS_STEPS_COUNT 100 // количество шагов для смены положения сервопривода
-#define DELAY_FOR_SERVO_STEP 10
+#define DELAY_FOR_SERVO_STEP 100
+void performAllImmediately(int newPositions[ROT3U6DOF_SERVO_COUNT]) {
+  for (int i=0; i<ROT3U6DOF_SERVO_COUNT; i++) {
+    SGServo currentServo = servos[i];
+    currentServo.performImmediately(newPositions[i]);
+  }
+}
 /*
 * Установка всех сервоприводов за один раз
 * newPositions - массив новых позиций (если значение UNDEFINED, обработка привода пропускается)
@@ -44,27 +50,26 @@ void performAllServos(int newPositions[ROT3U6DOF_SERVO_COUNT], int delay) {
       }
 
       int shiftRange = newPositions[i] - initialRanges[i];
-      int nextPos = (int) (initialRanges[i] + ((float)(shiftRange*step)/PROCESS_STEPS_COUNT));
+      int nextPos = (int) (initialRanges[i] + (((float)(shiftRange*step))/PROCESS_STEPS_COUNT));
 
-      // Перемещаем привод в посчитанное положение. В зависимости от необходимости калибровки
+      // Перемещаем привод в посчитанное положение.
       currentServo.performImmediately(nextPos);
-      //currentServo.servoPerformImmediatelyByPWD(nextPos);
-      /*-----------------------*/ 
     }
     ::delay(delay);
   }
 }
+
 void performAllServos(int newPositions[ROT3U6DOF_SERVO_COUNT]) {
   performAllServos(newPositions, DELAY_FOR_SERVO_STEP);
 }
 
-#define STARTPOS_SERVO1_DEG 90
-#define STARTPOS_SERVO2_DEG 90
-#define STARTPOS_SERVO3_DEG 90
-#define STARTPOS_SERVO4_DEG 90
-#define STARTPOS_SERVO5_DEG 90
-#define STARTPOS_SERVO6_DEG 90
-#define INITIAL_DELAY 40
+#define STARTPOS_SERVO1_DEG 45
+#define STARTPOS_SERVO2_DEG 0
+#define STARTPOS_SERVO3_DEG 48
+#define STARTPOS_SERVO4_DEG 160
+#define STARTPOS_SERVO5_DEG 180
+#define STARTPOS_SERVO6_DEG 20 // 10-60 ; 10-20 - opened
+#define INITIAL_DELAY 30
 /*
 * Установка начального положения манипулятора
 */
@@ -77,7 +82,7 @@ void resetROT3U6DOF() {
     STARTPOS_SERVO5_DEG,
     STARTPOS_SERVO6_DEG
   };
-  performAllServos(positions, INITIAL_DELAY);
+  performAllImmediately(positions);
 }
 
 #endif
